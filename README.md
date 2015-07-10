@@ -1,5 +1,4 @@
-# Модуль "Все товары" для OpenCart v2.0
-# Module "All products" for OpenCart v2.0
+# Модуль "Все товары" для OpenCart v2.0 Module "All products" for OpenCart v2.0
 ============================
 Данный модуль был переписан для OpenCart v2.0
 This module was rewritten for OpenCart v2.0
