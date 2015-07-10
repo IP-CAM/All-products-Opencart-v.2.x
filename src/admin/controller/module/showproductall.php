@@ -25,6 +25,7 @@ class ControllerModuleShowproductall extends Controller {
 		$data['text_content_bottom'] = $this->language->get('text_content_bottom');		
 		$data['text_column_left'] = $this->language->get('text_column_left');
 		$data['text_column_right'] = $this->language->get('text_column_right');
+		$data['text_edit'] = $this->language->get('text_edit');
 
 		$data['entry_layout'] = $this->language->get('entry_layout');
 		$data['entry_position'] = $this->language->get('entry_position');
@@ -79,6 +80,7 @@ class ControllerModuleShowproductall extends Controller {
 		$data['layouts'] = $this->model_design_layout->getLayouts();
 
 		$data['header'] = $this->load->controller('common/header');
+		$data['column_left'] = $this->load->controller('common/column_left');
 		$data['footer'] = $this->load->controller('common/footer');
 		
 		$this->response->setOutput($this->load->view('module/showproductall.tpl' ,$data));
