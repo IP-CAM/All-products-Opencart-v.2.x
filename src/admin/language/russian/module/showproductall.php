@@ -1,20 +1,16 @@
 <?php
 // Heading
-$_['heading_title']       = 'Все товары магазина'; 
-$_['text_heading_title']  = 'Все товары магазина'; 
+$_['heading_title']    = 'Все товары магазина';
+
 // Text
-$_['text_module']         = 'Модуль';
-$_['text_success']        = 'Модуль успешно обновлен!';
-$_['text_column_left']    = 'Левая колонка';
-$_['text_column_right']   = 'Правая колонка';
-$_['text_content_top']    = 'Содержание шапки';
-$_['text_content_bottom'] = 'Содержание подвала';
-$_['text_edit'] = 'Настройки модуля';
+$_['text_module']      = 'Модули';
+$_['text_success']     = 'Настройки успешно изменены!';
+$_['text_edit']        = 'Настройки модуля';
+
 // Entry
-$_['entry_layout']        = 'Макет';
-$_['entry_position']      = 'Позиция';
-$_['entry_status']        = 'Статус';
-$_['entry_sort_order']    = 'Порядок сортировки';
+$_['entry_name'] = 'Название модуля';
+$_['entry_status']     = 'Статус';
+
 // Error
-$_['error_permission']    = 'У Вас нет прав для изменения модуля!';
-?>
+$_['error_permission'] = 'У Вас нет прав для управления даннным модулем!';
+$_['error_name'] = 'Название модуля должно содержать минимум 3 символа!';

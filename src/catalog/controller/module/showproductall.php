@@ -1,14 +1,24 @@
 <?php
 class ControllerModuleShowproductall extends Controller {
-	private $error = array();
-	
-	protected function index() {
+	public function index($setting) {
 		$this->load->language('module/showproductall');
-		
-		$this->load->model('module/showproductall');
-		
-		$this->load->model('tool/image'); 
-		
+
+		$this->load->model('catalog/product');
+
+		$this->load->model('tool/image');		
+
+		$data['heading_title'] = $this->language->get('heading_title');
+
+		$data['text_tax'] = $this->language->get('text_tax');
+
+		$data['button_cart'] = $this->language->get('button_cart');
+		$data['button_wishlist'] = $this->language->get('button_wishlist');
+		$data['button_compare'] = $this->language->get('button_compare');
+		$data['button_list'] = $this->language->get('button_list');
+		$data['button_grid'] = $this->language->get('button_grid');
+		$data['text_sort'] = $this->language->get('text_sort');
+		$data['text_limit'] = $this->language->get('text_limit');
+
 		if (isset($this->request->get['sort'])) {
 			$sort = $this->request->get['sort'];
 		} else {
@@ -20,133 +30,93 @@ class ControllerModuleShowproductall extends Controller {
 		} else {
 			$order = 'ASC';
 		}
-		
+
 		if (isset($this->request->get['page'])) {
 			$page = $this->request->get['page'];
-		} else { 
+		} else {
 			$page = 1;
-		}	
-							
+		}
+
 		if (isset($this->request->get['limit'])) {
 			$limit = $this->request->get['limit'];
 		} else {
-			$limit = $this->config->get('config_catalog_limit');
+			$limit = $this->config->get('config_product_limit');
 		}
-					
-		$data['breadcrumbs'] = array();
 
-   		$data['breadcrumbs'][] = array(
-       		'text'      => $this->language->get('text_home'),
-			'href'      => $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL'),
-   		);	
-     	$data['heading_title'] = $this->language->get('heading_title');
-		$data['text_refine'] = $this->language->get('text_refine');
-		$data['text_empty'] = $this->language->get('text_empty');			
-		$data['text_quantity'] = $this->language->get('text_quantity');
-		$data['text_manufacturer'] = $this->language->get('text_manufacturer');
-		$data['text_model'] = $this->language->get('text_model');
-		$data['text_price'] = $this->language->get('text_price');
-		$data['text_tax'] = $this->language->get('text_tax');
-		$data['text_points'] = $this->language->get('text_points');
-		$data['text_display'] = $this->language->get('text_display');
-		$data['text_list'] = $this->language->get('text_list');
-		$data['text_grid'] = $this->language->get('text_grid');
-		$data['text_sort'] = $this->language->get('text_sort');
-		$data['text_limit'] = $this->language->get('text_limit');
-				
-		$data['button_cart'] = $this->language->get('button_cart');
-		$data['button_wishlist'] = $this->language->get('button_wishlist');
-		$data['button_compare'] = $this->language->get('button_compare');
-		$data['button_continue'] = $this->language->get('button_continue');
-		
-		$current_page = ($this->request->get['route']);		
-			
-			$url = '';
-			
-			if (isset($this->request->get['sort'])) {
-				$url .= '&sort=' . $this->request->get['sort'];
-			}	
+		$data['products'] = array();
 
-			if (isset($this->request->get['order'])) {
-				$url .= '&order=' . $this->request->get['order'];
-			}	
-			
-			if (isset($this->request->get['limit'])) {
-				$url .= '&limit=' . $this->request->get['limit'];
-			}
+		$filter_data = array(
+			'sort'               => $sort,
+			'order'              => $order,
+			'start'              => ($page - 1) * $limit,
+			'limit'              => $limit
+		);
 
-			$data['products'] = array();
+		$product_total = $this->model_catalog_product->getTotalProducts($filter_data);
 			
-			$data = array(
-				'sort'               => $sort,
-				'order'              => $order,
-				'start'              => ($page - 1) * $limit,
-				'limit'              => $limit
-			);
-					
-			$product_total = $this->model_module_showproductall->getTotalProducts($data);
-			
-			$results = $this->model_module_showproductall->getProducts($data);
-			
+		$results = $this->model_catalog_product->getProducts($filter_data);
+
 			foreach ($results as $result) {
 				if ($result['image']) {
 					$image = $this->model_tool_image->resize($result['image'], $this->config->get('config_image_product_width'), $this->config->get('config_image_product_height'));
 				} else {
-					$image = false;
+					$image = $this->model_tool_image->resize('placeholder.png', $this->config->get('config_image_product_width'), $this->config->get('config_image_product_height'));
 				}
-				
+
 				if (($this->config->get('config_customer_price') && $this->customer->isLogged()) || !$this->config->get('config_customer_price')) {
 					$price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')));
 				} else {
 					$price = false;
 				}
-				
+
 				if ((float)$result['special']) {
 					$special = $this->currency->format($this->tax->calculate($result['special'], $result['tax_class_id'], $this->config->get('config_tax')));
 				} else {
 					$special = false;
-				}	
-				
+				}
+
 				if ($this->config->get('config_tax')) {
 					$tax = $this->currency->format((float)$result['special'] ? $result['special'] : $result['price']);
 				} else {
 					$tax = false;
-				}				
-				
+				}
+
 				if ($this->config->get('config_review_status')) {
 					$rating = (int)$result['rating'];
 				} else {
 					$rating = false;
 				}
-								
+
 				$data['products'][] = array(
 					'product_id'  => $result['product_id'],
 					'thumb'       => $image,
 					'name'        => $result['name'],
-					'description' => mb_substr(strip_tags(html_entity_decode($result['description'], ENT_QUOTES, 'UTF-8')), 0, 100) . '..',
+					'description' => utf8_substr(strip_tags(html_entity_decode($result['description'], ENT_QUOTES, 'UTF-8')), 0, $this->config->get('config_product_description_length')) . '..',
 					'price'       => $price,
 					'special'     => $special,
 					'tax'         => $tax,
+					'minimum'     => $result['minimum'] > 0 ? $result['minimum'] : 1,
 					'rating'      => $result['rating'],
-					'reviews'     => sprintf($this->language->get('text_reviews'), (int)$result['reviews']),
-					'href'        => $this->url->link('product/product', '&product_id=' . $result['product_id'])
+					'href'        => $this->url->link('product/product', 'product_id=' . $result['product_id'])
 				);
 			}
+
+		    $current_page = $this->request->get['route'];	
 			
 			$url = '';
-	
+
 			if (isset($this->request->get['limit'])) {
 				$url .= '&limit=' . $this->request->get['limit'];
 			}
-							
+
 			$data['sorts'] = array();
-			
+
 			$data['sorts'][] = array(
 				'text'  => $this->language->get('text_default'),
 				'value' => 'p.sort_order-ASC',
 				'href'  => $this->url->link($current_page, '&sort=p.sort_order&order=ASC' . $url)
 			);
-			
+
 			$data['sorts'][] = array(
 				'text'  => $this->language->get('text_name_asc'),
 				'value' => 'pd.name-ASC',
@@ -163,26 +133,28 @@ class ControllerModuleShowproductall extends Controller {
 				'text'  => $this->language->get('text_price_asc'),
 				'value' => 'p.price-ASC',
 				'href'  => $this->url->link($current_page, '&sort=p.price&order=ASC' . $url)
-			); 
+			);
 
 			$data['sorts'][] = array(
 				'text'  => $this->language->get('text_price_desc'),
 				'value' => 'p.price-DESC',
 				'href'  => $this->url->link($current_page, '&sort=p.price&order=DESC' . $url)
-			); 
-			
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_rating_desc'),
-				'value' => 'rating-DESC',
-				'href'  => $this->url->link($current_page, '&sort=rating&order=DESC' . $url)
-			); 
-			
-			$data['sorts'][] = array(
-				'text'  => $this->language->get('text_rating_asc'),
-				'value' => 'rating-ASC',
-				'href'  => $this->url->link($current_page, '&sort=rating&order=ASC' . $url)
 			);
-			
+
+			if ($this->config->get('config_review_status')) {
+				$data['sorts'][] = array(
+					'text'  => $this->language->get('text_rating_desc'),
+					'value' => 'rating-DESC',
+					'href'  => $this->url->link($current_page, '&sort=rating&order=DESC' . $url)
+				);
+
+				$data['sorts'][] = array(
+					'text'  => $this->language->get('text_rating_asc'),
+					'value' => 'rating-ASC',
+					'href'  => $this->url->link($current_page, '&sort=rating&order=ASC' . $url)
+				);
+			}
+
 			$data['sorts'][] = array(
 				'text'  => $this->language->get('text_model_asc'),
 				'value' => 'p.model-ASC',
@@ -194,59 +166,41 @@ class ControllerModuleShowproductall extends Controller {
 				'value' => 'p.model-DESC',
 				'href'  => $this->url->link($current_page, '&sort=p.model&order=DESC' . $url)
 			);
-			
+
 			$url = '';
-	
+
 			if (isset($this->request->get['sort'])) {
 				$url .= '&sort=' . $this->request->get['sort'];
-			}	
+			}
 
 			if (isset($this->request->get['order'])) {
 				$url .= '&order=' . $this->request->get['order'];
 			}
-			
+
 			$data['limits'] = array();
-			
-			$data['limits'][] = array(
-				'text'  => $this->config->get('config_catalog_limit'),
-				'value' => $this->config->get('config_catalog_limit'),
-				'href'  => $this->url->link($current_page, $url . '&limit=' . $this->config->get('config_catalog_limit'))
-			);
-						
-			$data['limits'][] = array(
-				'text'  => 25,
-				'value' => 25,
-				'href'  => $this->url->link($current_page, $url . '&limit=25')
-			);
-			
-			$data['limits'][] = array(
-				'text'  => 50,
-				'value' => 50,
-				'href'  => $this->url->link($current_page, $url . '&limit=50')
-			);
 
-			$data['limits'][] = array(
-				'text'  => 75,
-				'value' => 75,
-				'href'  => $this->url->link($current_page, $url . '&limit=75')
-			);
-			
-			$data['limits'][] = array(
-				'text'  => 100,
-				'value' => 100,
-				'href'  => $this->url->link($current_page, $url . '&limit=100')
-			);
-						
+			$limits = array_unique(array($this->config->get('config_product_limit'), 25, 50, 75, 100));
+
+			sort($limits);
+
+			foreach($limits as $value) {
+				$data['limits'][] = array(
+					'text'  => $value,
+					'value' => $value,
+					'href'  => $this->url->link($current_page, $url . '&limit=' . $value)
+				);
+			}
+
 			$url = '';
-	
+
 			if (isset($this->request->get['sort'])) {
 				$url .= '&sort=' . $this->request->get['sort'];
-			}	
+			}
 
 			if (isset($this->request->get['order'])) {
 				$url .= '&order=' . $this->request->get['order'];
 			}
-	
+
 			if (isset($this->request->get['limit'])) {
 				$url .= '&limit=' . $this->request->get['limit'];
 			}
@@ -255,25 +209,22 @@ class ControllerModuleShowproductall extends Controller {
 			$pagination->total = $product_total;
 			$pagination->page = $page;
 			$pagination->limit = $limit;
-			$pagination->text = $this->language->get('text_pagination');
 			$pagination->url = $this->url->link($current_page, $url . '&page={page}');
-		
+
 			$data['pagination'] = $pagination->render();
-		
+
+			$data['results'] = sprintf($this->language->get('text_pagination'), ($product_total) ? (($page - 1) * $limit) + 1 : 0, ((($page - 1) * $limit) > ($product_total - $limit)) ? $product_total : ((($page - 1) * $limit) + $limit), $product_total, ceil($product_total / $limit));
+
 			$data['sort'] = $sort;
 			$data['order'] = $order;
-			$data['limit'] = $limit;
+			$data['limit'] = $limit;			
 
-			$data['continue'] = $this->url->link('common/home');
-
+		if ($data['products']) {
 			if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/module/showproductall.tpl')) {
-				$template = $this->config->get('config_template') . '/template/module/showproductall.tpl';
+				return $this->load->view($this->config->get('config_template') . '/template/module/showproductall.tpl', $data);
 			} else {
-				$template = 'default/template/module/showproductall.tpl';
+				return $this->load->view('default/template/module/showproductall.tpl', $data);
 			}
-				
-		$this->render();										
-		
-  	}
+		}
+	}
 }
-?>
